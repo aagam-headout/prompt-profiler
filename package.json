@@ -1,0 +1,40 @@
+{
+  "name": "prompt-profiler",
+  "version": "0.1.0",
+  "description": "Analyze local Claude Code / Cursor session data to surface a candidate's prompting-style signals.",
+  "type": "module",
+  "bin": {
+    "prompt-profiler": "bin/prompt-profiler.js"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "public",
+    "cli.js",
+    "server.js",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node bin/prompt-profiler.js serve",
+    "serve": "node bin/prompt-profiler.js serve",
+    "cli": "node bin/prompt-profiler.js",
+    "report": "node bin/prompt-profiler.js report"
+  },
+  "keywords": [
+    "claude-code",
+    "cursor",
+    "prompt",
+    "prompting",
+    "analysis",
+    "cli",
+    "developer-tools",
+    "session-analysis",
+    "hiring"
+  ],
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
