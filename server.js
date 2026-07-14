@@ -2,8 +2,8 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import esbuild from 'esbuild';
 import { listSources, loadPrompts } from './lib/parser.js';
 import { analyze } from './lib/analyzer.js';
 import { computeCohort, percentilesFor } from './lib/cohort.js';
@@ -17,25 +17,15 @@ const PORT = process.env.PORT || 4321;
 // missing.
 const publicDir = path.join(__dirname, 'public');
 const bundlePath = path.join(publicDir, 'bundle.js');
-const esbuildBin = path.join(
-  __dirname,
-  'node_modules',
-  '.bin',
-  process.platform === 'win32' ? 'esbuild.cmd' : 'esbuild'
-);
 if (!fs.existsSync(bundlePath)) {
   try {
-    execFileSync(
-      esbuildBin,
-      [
-        'src/main.jsx',
-        '--bundle',
-        '--outfile=public/bundle.js',
-        '--jsx=automatic',
-        '--loader:.js=jsx',
-      ],
-      { cwd: __dirname, stdio: 'inherit' }
-    );
+    esbuild.buildSync({
+      entryPoints: [path.join(__dirname, 'src/main.jsx')],
+      bundle: true,
+      outfile: bundlePath,
+      jsx: 'automatic',
+      loader: { '.js': 'jsx' },
+    });
   } catch (e) {
     console.warn(`Frontend bundle build failed: ${e.message}`);
   }
