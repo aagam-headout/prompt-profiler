@@ -20,10 +20,13 @@ export default [
     },
   },
   {
-    files: ['public/**/*.js'],
+    files: ['src/**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 2022,
-      sourceType: 'script',
+      sourceType: 'module',
+      parserOptions: {
+        ecmaFeatures: { jsx: true },
+      },
       globals: {
         window: 'readonly',
         document: 'readonly',
@@ -34,6 +37,6 @@ export default [
   },
   prettierConfig,
   {
-    ignores: ['node_modules/**', 'coverage/**'],
+    ignores: ['node_modules/**', 'coverage/**', 'public/bundle.js', 'public/**/*.js.map'],
   },
 ];

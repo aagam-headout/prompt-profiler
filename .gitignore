@@ -16,6 +16,7 @@ yarn-error.log*
 dist/
 build/
 coverage/
+public/bundle.js
 
 # OS
 .DS_Store

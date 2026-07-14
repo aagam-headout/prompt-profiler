@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
+import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { listSources, loadPrompts } from './lib/parser.js';
 import { analyze } from './lib/analyzer.js';
@@ -10,7 +12,36 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 4321;
 
-app.use(express.static(path.join(__dirname, 'public')));
+// Don't rely on `npm install` lifecycle scripts having built the frontend
+// bundle already (npx/version quirks) - build it here on first boot if it's
+// missing.
+const publicDir = path.join(__dirname, 'public');
+const bundlePath = path.join(publicDir, 'bundle.js');
+const esbuildBin = path.join(
+  __dirname,
+  'node_modules',
+  '.bin',
+  process.platform === 'win32' ? 'esbuild.cmd' : 'esbuild'
+);
+if (!fs.existsSync(bundlePath)) {
+  try {
+    execFileSync(
+      esbuildBin,
+      [
+        'src/main.jsx',
+        '--bundle',
+        '--outfile=public/bundle.js',
+        '--jsx=automatic',
+        '--loader:.js=jsx',
+      ],
+      { cwd: __dirname, stdio: 'inherit' }
+    );
+  } catch (e) {
+    console.warn(`Frontend bundle build failed: ${e.message}`);
+  }
+}
+
+app.use(express.static(publicDir));
 
 app.get('/api/projects', (_req, res) => {
   try {
