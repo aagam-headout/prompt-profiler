@@ -49,7 +49,7 @@ USAGE
   prompt-profiler <command> [options]
 
 COMMANDS
-  list                          List all sources (Claude projects + Cursor)
+  list                          List all sources (Claude projects + Cursor + Codex + OpenCode)
   analyze <id> | --all          Print scores & metrics for one source (text)
   compare <id1> <id2> ...       Rank 2+ sources side by side (also: a,b,c)
   report [<id> | --all]         Generate a self-contained HTML report & open it
@@ -59,6 +59,10 @@ REPORT OPTIONS
   --out <path>                  Write the HTML to this path
   --no-open                     Write the file but don't open the browser
 
+SHARED OPTIONS (analyze, report)
+  --tool <kind>                  Aggregate one tool's data instead of picking an id.
+                                 kind = claude | cursor | codex | opencode
+
 GLOBAL
   --help, -h                    Show this help
   --version, -v                 Print version
@@ -66,21 +70,25 @@ GLOBAL
 EXAMPLES
   prompt-profiler list
   prompt-profiler analyze --all
+  prompt-profiler analyze --tool codex
   prompt-profiler compare projA projB projC
   prompt-profiler report --all
+  prompt-profiler report --tool opencode
   prompt-profiler report my-project --out ./candidate.html --no-open
 `;
 
 function cmdList() {
   const sources = listSources();
-  console.log(`\n${sources.length} sources (Claude projects + Cursor):\n`);
+  console.log(`\n${sources.length} sources (Claude projects + Cursor + Codex + OpenCode):\n`);
   for (const p of sources)
     console.log(`  [${p.kind.padEnd(6)}] ${p.sessions.toString().padStart(3)} sessions  ${p.id}`);
   console.log('\nRun: prompt-profiler analyze <id>   (or --all, or compare a b c)\n');
 }
 
 function cmdAnalyze(rest) {
-  const id = rest.includes('--all') ? '__all__' : positionals().slice(1)[0] || flagVal('--project');
+  const id =
+    toolIdFromFlag() ||
+    (rest.includes('--all') ? '__all__' : positionals().slice(1)[0] || flagVal('--project'));
   if (!id) {
     console.error('Provide an id or --all:  prompt-profiler analyze <id>   (see: list)');
     process.exit(1);
@@ -99,7 +107,9 @@ function cmdAnalyze(rest) {
   console.log('\nFINGERPRINT:');
   console.log(`  style: ${result.fingerprint.style}`);
   console.log(`  tone : ${result.fingerprint.politeness}`);
-  console.log(`  top openers: ${result.fingerprint.topStarters.map((s) => `${s.word}(${s.pct}%)`).join(', ')}`);
+  console.log(
+    `  top openers: ${result.fingerprint.topStarters.map((s) => `${s.word}(${s.pct}%)`).join(', ')}`
+  );
   console.log('\nMETRICS:');
   for (const [k, v] of Object.entries(result.metrics)) console.log(`  ${k.padEnd(22)} ${v}`);
   console.log('');
@@ -120,7 +130,9 @@ function cmdCompare() {
     .map((id) => {
       const { prompts, sessionCount } = loadPrompts(id);
       const r = analyze(prompts, sessionCount);
-      const s = r.empty ? { technicalDepth: -1, authenticityEngagement: -1, independence: -1 } : r.scores;
+      const s = r.empty
+        ? { technicalDepth: -1, authenticityEngagement: -1, independence: -1 }
+        : r.scores;
       const composite = r.empty
         ? -1
         : Math.round((s.technicalDepth + s.authenticityEngagement + s.independence) / 3);
@@ -157,7 +169,9 @@ function openInBrowser(file) {
   }
   try {
     const child = spawn(cmd, args, { stdio: 'ignore', detached: true });
-    child.on('error', () => console.error(`Could not open browser (${cmd}). Open manually: ${file}`));
+    child.on('error', () =>
+      console.error(`Could not open browser (${cmd}). Open manually: ${file}`)
+    );
     child.unref();
   } catch {
     console.error(`Could not open browser. Open manually: ${file}`);
@@ -168,13 +182,35 @@ function sanitize(id) {
   return id.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'source';
 }
 
+// --tool <kind> shortcut → each tool's own aggregate-everything id.
+const TOOL_AGGREGATE_ID = {
+  claude: '__all__',
+  cursor: 'cursor::global',
+  codex: 'codex::global',
+  opencode: 'opencode::global',
+};
+
+function toolIdFromFlag() {
+  const tool = flagVal('--tool');
+  if (!tool) return null;
+  const id = TOOL_AGGREGATE_ID[tool.toLowerCase()];
+  if (!id) {
+    console.error(`Unknown --tool "${tool}". Valid: ${Object.keys(TOOL_AGGREGATE_ID).join(', ')}`);
+    process.exit(1);
+  }
+  return id;
+}
+
 function cmdReport() {
   const sources = listSources();
   const pos = positionals().slice(1);
 
   // Resolve which source to report on.
   let id;
-  if (has('--all')) {
+  const toolId = toolIdFromFlag();
+  if (toolId) {
+    id = toolId;
+  } else if (has('--all')) {
     id = '__all__';
   } else if (pos[0]) {
     id = pos[0];
@@ -191,14 +227,28 @@ function cmdReport() {
   const source =
     id === '__all__'
       ? { id: '__all__', kind: 'claude', label: 'All Claude Code data (aggregate — every project)' }
-      : sources.find((s) => s.id === id) || { id, kind: id.startsWith('cursor::') ? 'cursor' : 'claude', label: id };
+      : sources.find((s) => s.id === id) || {
+          id,
+          kind: id.startsWith('cursor::')
+            ? 'cursor'
+            : id.startsWith('codex::')
+              ? 'codex'
+              : id.startsWith('opencode::')
+                ? 'opencode'
+                : 'claude',
+          label: id,
+        };
 
   const { prompts, sessionCount } = loadPrompts(id);
   const result = analyze(prompts, sessionCount);
   const samples = buildSamples(prompts);
   const html = buildReport(result, samples, source);
 
-  const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15).replace(/(\d{8})(\d{6})/, '$1-$2');
+  const stamp = new Date()
+    .toISOString()
+    .replace(/[-:T]/g, '')
+    .slice(0, 15)
+    .replace(/(\d{8})(\d{6})/, '$1-$2');
   const outPath =
     flagVal('--out') ||
     path.join(process.cwd(), `prompt-profiler-report-${sanitize(id)}-${stamp}.html`);

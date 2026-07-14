@@ -5,20 +5,20 @@ runtime dependency (`express`, used only by the `serve` dashboard).
 
 ## Requirements
 
-| Requirement | Needed for | Notes |
-|-------------|-----------|-------|
-| Node.js ≥ 18 | Everything | The `"engines"` field in `package.json` enforces this. |
-| `sqlite3` binary on `PATH` | Cursor data only | Not needed for Claude Code. Preinstalled on macOS; on Linux/Windows you may have to install it. See [cursor.md](cursor.md). |
+| Requirement                | Needed for                    | Notes                                                                                                                                                               |
+| -------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Node.js ≥ 18               | Everything                    | The `"engines"` field in `package.json` enforces this.                                                                                                              |
+| `sqlite3` binary on `PATH` | Cursor and OpenCode data only | Not needed for Claude Code or Codex. Preinstalled on macOS; on Linux/Windows you may have to install it. See [cursor.md](cursor.md) and [opencode.md](opencode.md). |
 
-Claude Code analysis has **no external dependencies** beyond Node — it reads
-plain `.jsonl` files. The `sqlite3` requirement only applies if you want to
-profile Cursor chats.
+Claude Code and Codex analysis have **no external dependencies** beyond Node —
+both read plain `.jsonl` files. The `sqlite3` requirement only applies if you
+want to profile Cursor or OpenCode chats.
 
 ## This tool is unpublished
 
 `prompt-profiler` is **not on the npm registry yet**. Install it from GitHub.
 The npm-registry route (`npx prompt-profiler`) is documented last as a
-*future* option and does not work today.
+_future_ option and does not work today.
 
 ---
 
@@ -113,4 +113,6 @@ Publishing to npm is a maintainer task documented in
 - [commands.md](commands.md) — full command and flag reference
 - [claude-code.md](claude-code.md) — how Claude Code data is read
 - [cursor.md](cursor.md) — Cursor requirements and `sqlite3` setup
+- [codex.md](codex.md) — Codex session data
+- [opencode.md](opencode.md) — OpenCode requirements and `sqlite3` setup
 - [troubleshooting.md](troubleshooting.md) — "no sources found" and other issues

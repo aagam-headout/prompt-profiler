@@ -29,13 +29,13 @@ Notation: `n` = number of typed prompts; `ratio(x) = x / n`.
 
 Vocabulary and engineering-concept signal.
 
-| Component | Formula | Cap |
-|-----------|---------|-----|
-| Vocabulary richness | `TTR × 90` | TTR = unique words ÷ total words (type-token ratio) |
-| Technical density | `min(techHits/n, 3) / 3 × 30` | Curated tech-term hits per prompt, capped at 3/prompt |
-| File/path specificity | `ratio(hasPath) × 20` | Prompts referencing a file path or `.ext` |
-| Reasoning cues | `ratio(reasoning) × 25` | Prompts containing because/since/trade-off/edge case/… |
-| Prompt substance (length) | `min(avgLen/40, 1) × 15` | Rewards substantive average length up to 40 words |
+| Component                 | Formula                       | Cap                                                    |
+| ------------------------- | ----------------------------- | ------------------------------------------------------ |
+| Vocabulary richness       | `TTR × 90`                    | TTR = unique words ÷ total words (type-token ratio)    |
+| Technical density         | `min(techHits/n, 3) / 3 × 30` | Curated tech-term hits per prompt, capped at 3/prompt  |
+| File/path specificity     | `ratio(hasPath) × 20`         | Prompts referencing a file path or `.ext`              |
+| Reasoning cues            | `ratio(reasoning) × 25`       | Prompts containing because/since/trade-off/edge case/… |
+| Prompt substance (length) | `min(avgLen/40, 1) × 15`      | Rewards substantive average length up to 40 words      |
 
 The technical vocabulary is a **curated word-boundary list** of engineering
 concepts (async, closure, middleware, migration, race condition, refactor,
@@ -47,13 +47,13 @@ excluded, and matching is word-boundary based so `orm` won't fire inside
 
 Signal of real back-and-forth versus flat one-shot dictation.
 
-| Component | Formula |
-|-----------|---------|
-| Corrections / follow-ups | `ratio(corrections) × 60` |
-| Length variety | `min(stddev(lengths)/avgLen, 1) × 30` |
-| Iteration depth | `min(iterationDepth/8, 1) × 25` |
-| Not just one-liners | `(1 − min(ratio(oneLiners), 1)) × 20` |
-| Reasoning cues | `ratio(reasoning) × 15` |
+| Component                | Formula                               |
+| ------------------------ | ------------------------------------- |
+| Corrections / follow-ups | `ratio(corrections) × 60`             |
+| Length variety           | `min(stddev(lengths)/avgLen, 1) × 30` |
+| Iteration depth          | `min(iterationDepth/8, 1) × 25`       |
+| Not just one-liners      | `(1 − min(ratio(oneLiners), 1)) × 20` |
+| Reasoning cues           | `ratio(reasoning) × 15`               |
 
 `iterationDepth = n / sessionCount` (prompts per session). One-liners are
 prompts of ≤ 3 words. Corrections match cues like `no,`, `actually`, `instead`,
@@ -63,10 +63,10 @@ prompts of ≤ 3 words. Corrections match cues like `no,`, `actually`, `instead`
 
 Balance of understanding-seeking questions against pure command dictation.
 
-| Component | Formula |
-|-----------|---------|
+| Component                | Formula                           |
+| ------------------------ | --------------------------------- |
 | Question/command balance | `(1 − \|qr − 0.35\| / 0.65) × 60` |
-| Reasoning cues | `ratio(reasoning) × 40` |
+| Reasoning cues           | `ratio(reasoning) × 40`           |
 
 `qr` = question ratio (prompts containing `?` or opening with a question word).
 The balance term **peaks at a question ratio around 0.35** — neither all
@@ -79,19 +79,20 @@ composite = round( (technicalDepth + authenticityEngagement + independence) / 3 
 ```
 
 A plain-language `verdict` string is also generated (band Strong/Moderate/Light
-+ which signal leads + corpus size), and it always ends by telling the reader to
-read the prompts.
+
+- which signal leads + corpus size), and it always ends by telling the reader to
+  read the prompts.
 
 ## Reliability flag
 
 Because small corpora make ratios and vocabulary richness noisy, each analysis
 carries a reliability level based on prompt count `n`:
 
-| `n` | Level | Meaning |
-|-----|-------|---------|
-| ≥ 300 | high | Large corpus — comparatively stable. |
-| 60–299 | medium | Directional, not precise. |
-| < 60 | low | Noisy — read prompts directly, weight scores lightly. |
+| `n`    | Level  | Meaning                                               |
+| ------ | ------ | ----------------------------------------------------- |
+| ≥ 300  | high   | Large corpus — comparatively stable.                  |
+| 60–299 | medium | Directional, not precise.                             |
+| < 60   | low    | Noisy — read prompts directly, weight scores lightly. |
 
 ## Other data (not scored, for review)
 
@@ -116,8 +117,9 @@ Beyond the three signals, `analyze()` also produces:
   (courteous/occasional/blunt), and a style label (terse/balanced/verbose,
   inquisitive, iterative/hands-on).
 - **Activity timeline + hourly histogram** — only when per-prompt timestamps
-  exist. Claude Code has them; **Cursor does not**, so these are empty for
-  Cursor (see [cursor.md](cursor.md#limitations-vs-claude-code)).
+  exist. Claude Code, Codex, and OpenCode all have per-prompt timestamps;
+  **Cursor does not**, so these are empty for Cursor (see
+  [cursor.md](cursor.md#limitations-vs-claude-code)).
 
 ## The empty-source case
 
@@ -137,4 +139,6 @@ last.
 - [commands.md](commands.md) — running `analyze`, `report`, `compare`
 - [claude-code.md](claude-code.md) — what feeds the scorer
 - [cursor.md](cursor.md) — why Cursor timelines are empty
+- [codex.md](codex.md) — the Codex reader
+- [opencode.md](opencode.md) — the OpenCode reader
 - [privacy.md](privacy.md) — reports contain raw prompt samples

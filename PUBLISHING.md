@@ -77,7 +77,7 @@ git push --follow-tags
 
 ## Testing the tarball before going public
 
-To dry-run the *installed* experience without touching the registry:
+To dry-run the _installed_ experience without touching the registry:
 
 ```bash
 npm pack                                  # produces prompt-profiler-<ver>.tgz

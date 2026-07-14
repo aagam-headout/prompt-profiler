@@ -40,7 +40,9 @@ prompt-profiler report --all
 ```
 
 Note: `--all` covers Claude Code workspaces only. It does **not** fold in the
-Cursor source — analyze `cursor::global` separately (see [cursor.md](cursor.md)).
+Cursor, Codex, or OpenCode sources — analyze `cursor::global`, `codex::global`,
+or `opencode::global` separately (see [cursor.md](cursor.md),
+[codex.md](codex.md), [opencode.md](opencode.md)).
 
 ## What counts as a human prompt
 
@@ -83,12 +85,12 @@ prompts. See [scoring.md](scoring.md).
 While scanning, the parser also reads `assistant` events to surface context
 (shown in the report / dashboard, not scored):
 
-| Metadata | Source | Notes |
-|----------|--------|-------|
-| **Models used** | `message.model` on assistant turns | Masked models (starting with `<`) are skipped. |
-| **Tools invoked** | `tool_use` blocks | Counts per tool name (Bash, Read, Edit, MCP tools, …). |
-| **Languages generated** | file extension of `Write` / `Edit` / `MultiEdit` / `NotebookEdit` targets | Extension → language name (e.g. `.ts` → TypeScript). |
-| **Claude Code versions** | `version` field on any event | Distribution of CLI versions seen. |
+| Metadata                 | Source                                                                    | Notes                                                  |
+| ------------------------ | ------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **Models used**          | `message.model` on assistant turns                                        | Masked models (starting with `<`) are skipped.         |
+| **Tools invoked**        | `tool_use` blocks                                                         | Counts per tool name (Bash, Read, Edit, MCP tools, …). |
+| **Languages generated**  | file extension of `Write` / `Edit` / `MultiEdit` / `NotebookEdit` targets | Extension → language name (e.g. `.ts` → TypeScript).   |
+| **Claude Code versions** | `version` field on any event                                              | Distribution of CLI versions seen.                     |
 
 ## How to profile someone else
 
@@ -108,6 +110,8 @@ verdict. Always read the raw prompt samples the report surfaces.
 ## See Also
 
 - [cursor.md](cursor.md) — the parallel Cursor reader
+- [codex.md](codex.md) — the parallel Codex reader
+- [opencode.md](opencode.md) — the parallel OpenCode reader
 - [scoring.md](scoring.md) — what happens to the prompts after parsing
 - [commands.md](commands.md) — `list`, `analyze`, `report`, `--all`
 - [privacy.md](privacy.md) — everything stays local

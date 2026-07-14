@@ -2,7 +2,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { listProjects, listSources, loadPrompts } from './lib/parser.js';
+import { listSources, loadPrompts } from './lib/parser.js';
 import { analyze } from './lib/analyzer.js';
 import { computeCohort, percentilesFor } from './lib/cohort.js';
 
@@ -48,8 +48,17 @@ app.get('/api/compare', (req, res) => {
         style: r.fingerprint ? r.fingerprint.style : null,
       };
     } catch (e) {
-      return { id, label: labelOf(id), kind: kindOf(id), empty: true, error: e.message,
-        counts: null, scores: null, metrics: null, style: null };
+      return {
+        id,
+        label: labelOf(id),
+        kind: kindOf(id),
+        empty: true,
+        error: e.message,
+        counts: null,
+        scores: null,
+        metrics: null,
+        style: null,
+      };
     }
   });
   res.json(rows);
@@ -71,13 +80,16 @@ app.get('/api/analyze', (req, res) => {
       .map((p) => p.text.slice(0, 400));
 
     // Percentile rank of this source's scores vs every analyzed source.
-    let percentiles = null, cohortSize = 0;
+    let percentiles = null,
+      cohortSize = 0;
     if (!result.empty) {
       try {
         const cohort = computeCohort();
         cohortSize = cohort.size;
         percentiles = percentilesFor(result.scores, cohort);
-      } catch { /* percentiles are best-effort */ }
+      } catch {
+        /* percentiles are best-effort */
+      }
     }
     res.json({ ...result, samples, meta: meta || {}, percentiles, cohortSize });
   } catch (e) {
@@ -87,7 +99,8 @@ app.get('/api/analyze', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`\n  Prompt Profiler running → http://localhost:${PORT}\n`);
-  console.log('  Reads local Claude Code (~/.claude/projects) and Cursor');
-  console.log('  (global SQLite store, via the sqlite3 CLI) session data.');
+  console.log('  Reads local Claude Code (~/.claude/projects), Cursor (global');
+  console.log('  SQLite store), Codex (~/.codex/sessions) and OpenCode (SQLite');
+  console.log('  store) session data.');
   console.log('  Scores are heuristic signals for human review, not verdicts.\n');
 });

@@ -9,9 +9,10 @@
   `http(s)://` `src`/`href` references — see the check in
   [../PUBLISHING.md](../PUBLISHING.md).)
 - **Reads local files/DB only.** Claude Code data comes from
-  `~/.claude/projects/*.jsonl`; Cursor data is read **read-only** from the local
-  `state.vscdb` SQLite database via the `sqlite3` CLI. Nothing is written back to
-  either source.
+  `~/.claude/projects/*.jsonl`; Codex data comes from
+  `~/.codex/sessions/**/*.jsonl` (and `archived_sessions`); Cursor and OpenCode
+  data are read **read-only** from their local SQLite databases via the
+  `sqlite3` CLI. Nothing is written back to any source.
 - **`serve` binds localhost only.** The dashboard listens on
   `http://localhost:4321` (or your `PORT`); it is not exposed to your network.
 
@@ -46,4 +47,6 @@ consequential decisions (hiring, evaluation) from the numbers alone. See
 - [scoring.md](scoring.md) — the heuristic-signals framing
 - [claude-code.md](claude-code.md) — what local files are read
 - [cursor.md](cursor.md) — read-only SQLite access
+- [codex.md](codex.md) — Codex session files
+- [opencode.md](opencode.md) — the other read-only SQLite reader
 - [commands.md](commands.md) — the `report` and `serve` commands

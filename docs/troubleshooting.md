@@ -1,7 +1,8 @@
 # Troubleshooting
 
 Common issues and fixes. If your problem isn't here, check the relevant reader
-doc: [claude-code.md](claude-code.md) or [cursor.md](cursor.md).
+doc: [claude-code.md](claude-code.md), [cursor.md](cursor.md),
+[codex.md](codex.md), or [opencode.md](opencode.md).
 
 ## "No sources found" / empty `list`
 
@@ -28,6 +29,28 @@ The `cursor::global` source is missing from `list`.
 - **No Cursor DB found.** Confirm `state.vscdb` exists at the platform path in
   [cursor.md](cursor.md#database-locations) and that Cursor has been used at
   least once.
+
+## Codex not showing up
+
+The `codex::global` source is missing from `list`.
+
+- Confirm `~/.codex/sessions` (or `~/.codex/archived_sessions`) exists and
+  contains `rollout-*.jsonl` files under the nested `YYYY/MM/DD` layout. If
+  you've never run Codex CLI/Desktop, there's nothing to read.
+- Like Claude Code, the tool reads from the **current user's home** — run as
+  yourself, not a different user/service account.
+
+## OpenCode not showing up
+
+The `opencode::global` source is missing from `list`.
+
+- **`sqlite3` not on PATH.** Check with `sqlite3 --version` (same fix as
+  [cursor.md](cursor.md#troubleshooting)).
+- **Database locked (OpenCode is running).** Close OpenCode and retry — a
+  locked DB degrades to empty rather than crashing.
+- **No OpenCode DB found.** Confirm `opencode.db` exists at one of the paths in
+  [opencode.md](opencode.md#database-locations) and that OpenCode has been
+  used at least once.
 
 ## Port 4321 already in use
 
@@ -80,4 +103,6 @@ traffic).`
 - [installation.md](installation.md) — requirements and install routes
 - [commands.md](commands.md) — command and flag reference
 - [cursor.md](cursor.md) — `sqlite3` setup and DB locations
+- [codex.md](codex.md) — Codex session file locations
+- [opencode.md](opencode.md) — OpenCode `sqlite3` setup and DB locations
 - [scoring.md](scoring.md) — the empty-source case

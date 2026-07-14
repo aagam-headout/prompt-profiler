@@ -159,6 +159,8 @@
     padding:2px 7px; border-radius:3px; border:1px solid var(--border); color:var(--muted); }
   .badge.cursor { color:var(--violet); border-color:rgba(180,142,173,.5); }
   .badge.claude { color:var(--amber); border-color:rgba(224,164,88,.5); }
+  .badge.codex { color:var(--teal); border-color:rgba(78,201,176,.5); }
+  .badge.opencode { color:var(--coral); border-color:rgba(224,112,90,.5); }
   .rank { font-family:var(--serif); font-size:22px; color:var(--amber); width:34px; }
   .minibar { display:inline-block; height:7px; border-radius:4px; vertical-align:middle; margin-left:8px; }
   .sub { color:var(--faint); font-size:11.5px; font-family:var(--mono); }
@@ -218,7 +220,7 @@
   <header>
     <div class="eyebrow">Prompting-Style Assessment Instrument</div>
     <h1>Prompt <em>Profiler</em></h1>
-    <p class="lede">Reads a candidate's full local session history from Claude Code and Cursor, then surfaces prompting-style signals — technical depth, engagement, independence — for human review.</p>
+    <p class="lede">Reads a candidate's full local session history from Claude Code, Cursor, Codex, and OpenCode, then surfaces prompting-style signals — technical depth, engagement, independence — for human review.</p>
   </header>
 
   <div class="disclaimer">
@@ -231,6 +233,8 @@
     <div class="seg tool" id="toolSeg">
       <button data-tool="claude" class="on">Claude Code</button>
       <button data-tool="cursor">Cursor</button>
+      <button data-tool="codex">Codex</button>
+      <button data-tool="opencode">OpenCode</button>
     </div>
     <span class="lab" style="margin-left:12px">Mode</span>
     <div class="seg" id="modeSeg">
@@ -392,7 +396,8 @@ function render() {
     : (agg ? '' : '<option value="">— no sources for this tool —</option>'));
 
   // compare checklist
-  $('#toolNameC').textContent = TOOL === 'cursor' ? 'Cursor' : 'Claude Code';
+  const TOOL_NAMES = { claude: 'Claude Code', cursor: 'Cursor', codex: 'Codex', opencode: 'OpenCode' };
+  $('#toolNameC').textContent = TOOL_NAMES[TOOL] || TOOL;
   const pl = $('#pickList');
   pl.innerHTML = list.length
     ? list.map((p) => `<label class="pick"><input type="checkbox" value="${p.id}">
@@ -402,11 +407,15 @@ function render() {
 }
 
 // tool + mode switching
+let HAS_ANALYZED = false;
+const markReanalyze = () => { if (HAS_ANALYZED) $('#run').textContent = 'Re-analyze'; };
+
 $('#toolSeg').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
   TOOL = b.dataset.tool;
   $$('#toolSeg button').forEach((x) => x.classList.toggle('on', x === b));
   render();
+  markReanalyze();
 });
 $('#modeSeg').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
@@ -415,6 +424,7 @@ $('#modeSeg').addEventListener('click', (e) => {
   $('#panel-profile').style.display = MODE === 'profile' ? '' : 'none';
   $('#panel-compare').style.display = MODE === 'compare' ? '' : 'none';
 });
+$('#project').addEventListener('change', markReanalyze);
 
 // ---------- DEEP DIVE ----------
 async function run() {
@@ -430,6 +440,9 @@ async function run() {
   }
   if (!d || d.error) return void ($('#out').innerHTML = `<div class="empty">Error: ${(d && d.error) || 'unknown'}</div>`);
   if (d.empty) return void ($('#out').innerHTML = `<div class="empty">${d.message}</div>`);
+
+  HAS_ANALYZED = true;
+  $('#run').textContent = 'Re-analyze';
 
   const s = d.scores, m = d.metrics, c = d.counts, ss = d.sessionStats;
   $('#meta').textContent = `${c.typedPrompts} prompts · ${c.sessions} sessions · ${c.totalWords.toLocaleString()} words`;

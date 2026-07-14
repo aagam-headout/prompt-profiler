@@ -10,15 +10,15 @@ GitHub `npx github:<your-github-username>/prompt-profiler`.
 
 ## Commands at a glance
 
-| Command | Purpose |
-|---------|---------|
-| `list` | List every source (Claude Code projects + Cursor). |
-| `analyze <id> \| --all` | Print scores, fingerprint, and metrics for one source. |
-| `compare <id...>` | Rank 2+ sources side by side. |
-| `report [<id> \| --all]` | Generate and open a self-contained HTML report. |
-| `serve` | Run the web dashboard on `http://localhost:4321`. |
-| `--help`, `-h` | Show usage. |
-| `--version`, `-v` | Print the version. |
+| Command                  | Purpose                                                               |
+| ------------------------ | --------------------------------------------------------------------- |
+| `list`                   | List every source (Claude Code projects + Cursor + Codex + OpenCode). |
+| `analyze <id> \| --all`  | Print scores, fingerprint, and metrics for one source.                |
+| `compare <id...>`        | Rank 2+ sources side by side.                                         |
+| `report [<id> \| --all]` | Generate and open a self-contained HTML report.                       |
+| `serve`                  | Run the web dashboard on `http://localhost:4321`.                     |
+| `--help`, `-h`           | Show usage.                                                           |
+| `--version`, `-v`        | Print the version.                                                    |
 
 ---
 
@@ -27,9 +27,10 @@ GitHub `npx github:<your-github-username>/prompt-profiler`.
 **Synopsis:** `prompt-profiler list`
 
 Lists all discovered sources — every Claude Code workspace under
-`~/.claude/projects` plus (if `sqlite3` and a Cursor DB are present) the single
-Cursor source. Each row shows the source kind, session count, and the source
-`id` you pass to other commands.
+`~/.claude/projects`, plus (if present) the single aggregate sources for
+Cursor (`sqlite3` + Cursor DB), Codex (`~/.codex/sessions`), and OpenCode
+(`sqlite3` + OpenCode DB). Each row shows the source kind, session count, and
+the source `id` you pass to other commands.
 
 ```bash
 prompt-profiler list
@@ -38,19 +39,23 @@ prompt-profiler list
 Sample output:
 
 ```text
-24 sources (Claude projects + Cursor):
+26 sources (Claude projects + Cursor + Codex + OpenCode):
 
   [claude]  68 sessions  -Users-aagam-code-ho-ai-porygon-mcp-ft-proto-mcp
   [claude]  49 sessions  -Users-aagam-code-ho-ai-porygon-dashboard
   [claude]   2 sessions  -Users-aagam-code-ho-ai-claude-test
   [cursor] 547 sessions  cursor::global
+  [codex]   66 sessions  codex::global
+  [opencode] 30 sessions opencode::global
 
 Run: prompt-profiler analyze <id>   (or --all, or compare a b c)
 ```
 
 A Claude source `id` is the dash-encoded workspace folder name (see
-[claude-code.md](claude-code.md)). The Cursor source `id` is always
-`cursor::global` (see [cursor.md](cursor.md)).
+[claude-code.md](claude-code.md)). The Cursor, Codex, and OpenCode source ids
+are always `cursor::global`, `codex::global`, and `opencode::global`
+respectively (see [cursor.md](cursor.md), [codex.md](codex.md),
+[opencode.md](opencode.md)).
 
 ---
 
@@ -63,10 +68,10 @@ composite, the style fingerprint, and the full metrics table.
 
 **Options**
 
-| Option | Meaning |
-|--------|---------|
-| `<id>` | A source id from `list`. |
-| `--all` | Aggregate every Claude Code workspace (source id `__all__`). Cursor is **not** included in `--all`. |
+| Option  | Meaning                                                                                                                   |
+| ------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `<id>`  | A source id from `list`.                                                                                                  |
+| `--all` | Aggregate every Claude Code workspace (source id `__all__`). Cursor, Codex, and OpenCode are **not** included in `--all`. |
 
 ```bash
 prompt-profiler analyze -Users-aagam-code-ho-ai-claude-test
@@ -149,10 +154,10 @@ browser.
 
 **Options**
 
-| Option | Meaning |
-|--------|---------|
+| Option         | Meaning                                                                          |
+| -------------- | -------------------------------------------------------------------------------- |
 | `--out <path>` | Write the HTML here instead of the default path. Parent directories are created. |
-| `--no-open` | Write the file but do not launch the browser. |
+| `--no-open`    | Write the file but do not launch the browser.                                    |
 
 Default output path (current working directory):
 `prompt-profiler-report-<sanitized-id>-<timestamp>.html`.
@@ -187,9 +192,9 @@ Delegates to `server.js`.
 
 **Environment**
 
-| Variable | Meaning |
-|----------|---------|
-| `PORT` | Override the port (default `4321`). |
+| Variable | Meaning                             |
+| -------- | ----------------------------------- |
+| `PORT`   | Override the port (default `4321`). |
 
 ```bash
 prompt-profiler serve
@@ -251,4 +256,6 @@ Prefer the subcommand CLI for anything new.
 - [scoring.md](scoring.md) — what the scores and metrics mean
 - [claude-code.md](claude-code.md) — Claude Code source ids and `--all`
 - [cursor.md](cursor.md) — the `cursor::global` source
+- [codex.md](codex.md) — the `codex::global` source
+- [opencode.md](opencode.md) — the `opencode::global` source
 - [troubleshooting.md](troubleshooting.md) — port in use, empty analysis, etc.
