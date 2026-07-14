@@ -87,6 +87,7 @@ app.get('/api/analyze', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`\n  Prompt Profiler running → http://localhost:${PORT}\n`);
-  console.log('  Reads local Claude Code data from ~/.claude/projects');
+  console.log('  Reads local Claude Code (~/.claude/projects) and Cursor');
+  console.log('  (global SQLite store, via the sqlite3 CLI) session data.');
   console.log('  Scores are heuristic signals for human review, not verdicts.\n');
 });
