@@ -4,6 +4,7 @@ import { Ring, CountNum } from './Gauge.jsx';
 import { Sparkline, HourlyChart } from './Sparkline.jsx';
 import { ProfileSkeleton } from './Skeleton.jsx';
 import { NOTE, TITLE, ordinal, clr } from '../constants.js';
+import { usePersistedState } from '../hooks/usePersistedState.js';
 
 function BarRow({ label, value, widthPct, dataG, mono }) {
   return (
@@ -55,9 +56,12 @@ function Breakdown({ d, k }) {
       {d.breakdowns[k].map((r, i) => (
         <div className="brow" key={i}>
           <span>{r.label}</span>
-          <span className="bpts">+{r.points}</span>
+          <span className="bpts">
+            {r.points < 0 ? '−' : '+'}
+            {Math.abs(r.points)}
+          </span>
           <span className="brail">
-            <i style={{ width: Math.min(100, r.points * 3) + '%' }}></i>
+            <i style={{ width: Math.max(0, Math.min(100, Math.abs(r.points) * 3)) + '%' }}></i>
           </span>
         </div>
       ))}
@@ -132,6 +136,12 @@ function Results({ d }) {
 
   return (
     <>
+      {d.engine === 'claude' && (
+        <div className="aibadge" data-g={`Scored by Claude CLI (${d.model || 'sonnet-5'})`}>
+          <span className="aidot">✦</span> AI judgment · {d.model || 'claude-sonnet-5'}
+          {d.aiSummary ? <span className="aisum"> — {d.aiSummary}</span> : null}
+        </div>
+      )}
       <section>
         <Verdict text={d.verdict} />
       </section>
@@ -435,10 +445,14 @@ export default function Profile({ tool, list, onLoadingChange }) {
   const [error, setError] = useState(null);
   const [statusMsg, setStatusMsg] = useState('Select a source and run the analysis.');
   const [meta, setMeta] = useState('');
+  // Analysis engine: 'nlp' = local deterministic heuristic, 'claude' = Claude
+  // CLI (sonnet-5) judgment. Persisted so it survives reloads.
+  const [engine, setEngine] = usePersistedState('pp.engine', 'nlp');
 
-  // Analyses are pure over a source id, so cache them: revisiting a source you
-  // already ran shows instantly with no refetch.
+  // Analyses are pure over (source id, engine), so cache them: revisiting a
+  // combo you already ran shows instantly with no refetch.
   const cacheRef = useRef(new Map());
+  const cacheKey = (id, eng) => `${id}::${eng}`;
 
   // Re-populate the selected project whenever the tool (or its source list)
   // changes — mirrors the old innerHTML replace resetting <select>.value.
@@ -450,7 +464,7 @@ export default function Profile({ tool, list, onLoadingChange }) {
   // one, otherwise clear stale results so `meta` never mismatches the view.
   useEffect(() => {
     setError(null);
-    const hit = projectId && cacheRef.current.get(projectId);
+    const hit = projectId && cacheRef.current.get(cacheKey(projectId, engine));
     if (hit) {
       setData(hit.data);
       setMeta(hit.meta);
@@ -463,7 +477,7 @@ export default function Profile({ tool, list, onLoadingChange }) {
         projectId ? 'Ready — run the analysis.' : 'Select a source and run the analysis.'
       );
     }
-  }, [projectId]);
+  }, [projectId, engine]);
 
   useEffect(() => {
     onLoadingChange?.(loading);
@@ -474,10 +488,14 @@ export default function Profile({ tool, list, onLoadingChange }) {
     if (!id) return;
     setLoading(true);
     setError(null);
-    setStatusMsg('Reading full corpus…');
+    setStatusMsg(
+      engine === 'claude'
+        ? 'Asking Claude (sonnet-5) — this can take a bit…'
+        : 'Reading full corpus…'
+    );
     let d;
     try {
-      const r = await fetch('/api/analyze?project=' + encodeURIComponent(id));
+      const r = await fetch('/api/analyze?project=' + encodeURIComponent(id) + '&engine=' + engine);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       d = await r.json();
     } catch (e) {
@@ -502,7 +520,7 @@ export default function Profile({ tool, list, onLoadingChange }) {
     const metaStr = `${c.typedPrompts} prompts · ${c.sessions} sessions · ${c.totalWords.toLocaleString()} words`;
     setMeta(metaStr);
     setData(d);
-    cacheRef.current.set(id, { data: d, meta: metaStr });
+    cacheRef.current.set(cacheKey(id, engine), { data: d, meta: metaStr });
     setLoading(false);
   }
 
@@ -528,6 +546,28 @@ export default function Profile({ tool, list, onLoadingChange }) {
               ))
             : tool !== 'claude' && <option value="">— no sources for this tool —</option>}
         </select>
+        <div
+          className="seg engine"
+          id="engineSeg"
+          data-g="NLP = local heuristic · Claude = sonnet-5 via CLI"
+        >
+          <button
+            data-engine="nlp"
+            className={engine === 'nlp' ? 'on' : ''}
+            disabled={loading}
+            onClick={() => setEngine('nlp')}
+          >
+            NLP
+          </button>
+          <button
+            data-engine="claude"
+            className={engine === 'claude' ? 'on' : ''}
+            disabled={loading}
+            onClick={() => setEngine('claude')}
+          >
+            Claude CLI
+          </button>
+        </div>
         <button
           className={`btn primary${loading ? ' loading' : ''}`}
           id="run"

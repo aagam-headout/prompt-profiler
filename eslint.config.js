@@ -13,6 +13,8 @@ export default [
         Buffer: 'readonly',
         __dirname: 'readonly',
         fetch: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
       },
     },
     rules: {

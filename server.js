@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
 import { listSources, loadPrompts } from './lib/parser.js';
 import { analyze } from './lib/analyzer.js';
+import { analyzeWithClaude } from './lib/ai-analyzer.js';
 import { computeCohort, percentilesFor } from './lib/cohort.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -85,12 +86,17 @@ app.get('/api/compare', (req, res) => {
   res.json(rows);
 });
 
-app.get('/api/analyze', (req, res) => {
+app.get('/api/analyze', async (req, res) => {
   const id = req.query.project;
   if (!id) return res.status(400).json({ error: 'missing ?project=' });
+  // engine=nlp (default, deterministic heuristic) | claude (Claude CLI, sonnet-5)
+  const engine = req.query.engine === 'claude' ? 'claude' : 'nlp';
   try {
     const { prompts, sessionCount, meta } = loadPrompts(id);
-    const result = analyze(prompts, sessionCount);
+    const result =
+      engine === 'claude'
+        ? await analyzeWithClaude(prompts, sessionCount)
+        : analyze(prompts, sessionCount);
     // Full data drives the analysis; we surface a generous, evenly-sampled
     // slice of raw prompts so a reviewer can read across the whole corpus.
     const typed = prompts.filter((p) => !p.isSlash);
@@ -112,7 +118,7 @@ app.get('/api/analyze', (req, res) => {
         /* percentiles are best-effort */
       }
     }
-    res.json({ ...result, samples, meta: meta || {}, percentiles, cohortSize });
+    res.json({ engine, ...result, samples, meta: meta || {}, percentiles, cohortSize });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

@@ -131,6 +131,35 @@ h1 em {
   background: var(--amber);
   color: #231a0c;
 }
+.seg.engine button.on {
+  background: var(--violet);
+  color: #1a121c;
+}
+
+/* AI-engine result banner (shown when scored by the Claude CLI). */
+.aibadge {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 4px 0 18px;
+  padding: 10px 14px;
+  border: 1px solid var(--violet);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--violet) 10%, var(--panel));
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+.aibadge .aidot {
+  color: var(--violet);
+}
+.aibadge .aisum {
+  color: var(--muted);
+  font-family: var(--body);
+  letter-spacing: 0;
+}
 
 .rowline {
   display: flex;
